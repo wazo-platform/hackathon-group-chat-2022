@@ -1,6 +1,7 @@
 import { For, createSignal, createEffect } from "solid-js";
 import SolidMarkdown from "solid-markdown";
 import { WazoApiClient } from '@wazo/sdk'
+import 'emoji-picker-element';
 
 const urlParams = new URLSearchParams(window.location.search);
 const host = urlParams.get('host');
@@ -21,12 +22,19 @@ let refMessage;
 let refRoom;
 
 function App() {
+  const [showPicker, setShowPicker] = createSignal(false);
   const [currentUser, setCurrentUser] = createSignal(null);
   const [rooms, setRooms] = createSignal(null);
   const [room, setRoom] = createSignal(null);
   const [messages, setMessages] = createSignal(null);
 
   createEffect(() => {
+    document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
+      refMessage.value = refMessage.value + event.detail.unicode;
+      refMessage.focus();
+      setShowPicker(false);
+    });
+
     client.auth.logIn({
       expiration,
       username: username,
@@ -78,6 +86,10 @@ function App() {
     });
   }
 
+  const toggleEmojiPicker = () => {
+    setShowPicker(!showPicker())
+  }
+
   if(!host || !username || !password) {
     return <p>Please defined server config in the URL: <code>{ window.location.origin }/?host=MY_HOST&username=MY_USERNAME&password=MY_PASSWORD</code></p>
   }
@@ -118,10 +130,11 @@ function App() {
             {/* <textarea ref={refMessage}></textarea> */}
             <input type="text" ref={refMessage} required />
           </form>
-          <button>Emoji</button>
+          <button className={styles.buttonEmoji} onClick={toggleEmojiPicker}>😀</button>
         </div>
       </div>
 
+      <emoji-picker className={showPicker() ? '' : 'hide'}></emoji-picker>
     </div>
   );
 }
