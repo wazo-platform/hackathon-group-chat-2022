@@ -1,5 +1,6 @@
 import { For, createSignal, createEffect } from "solid-js";
-import { WazoApiClient } from '@wazo/sdk';
+import SolidMarkdown from "solid-markdown";
+import { WazoApiClient } from '@wazo/sdk'
 
 const urlParams = new URLSearchParams(window.location.search);
 const host = urlParams.get('host');
@@ -105,9 +106,7 @@ function App() {
               (message) => (
                 <div className={styles.roomMessage}>
                   <p className={styles.roomMessageAuthor}>{ message.alias }</p>
-                  <div>
-                    { message.content }
-                  </div>
+                  <SolidMarkdown children={message.content} />
                 </div>
               )
             }
