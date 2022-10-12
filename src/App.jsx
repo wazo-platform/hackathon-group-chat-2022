@@ -1,44 +1,84 @@
-import { For, createSignal } from "solid-js";
+import { For, createSignal, createEffect } from "solid-js";
+import { WazoApiClient } from '@wazo/sdk';
+
+const urlParams = new URLSearchParams(window.location.search);
+const host = urlParams.get('host');
+const username = urlParams.get('username');
+const password = urlParams.get('password');
+
+const client = new WazoApiClient({
+  server: host,
+  agent: null, // http(s).Agent instance, allows custom proxy, unsecured https, certificate etc.
+  clientId: null, // Set an identifier for your app when using refreshToken
+  isMobile: false,
+});
 
 import styles from './App.module.scss';
 
+const expiration = 60 * 2;
+let refMessage;
+let refRoom;
+
 function App() {
-  let refMessage;
-  let refRoom;
+  const [currentUser, setCurrentUser] = createSignal(null);
+  const [rooms, setRooms] = createSignal(null);
+  const [room, setRoom] = createSignal(null);
+  const [messages, setMessages] = createSignal(null);
 
-  const [rooms, setRooms] = createSignal([
-    { uuid: 1, name: 'Room 1'},
-    { uuid: 2, name: 'Room 2'},
-    { uuid: 3, name: 'Room 3'},
-    { uuid: 4, name: 'Room 4'},
-    { uuid: 5, name: 'Room 5'},
-    { uuid: 6, name: 'Room 6'},
-    { uuid: 7, name: 'Room 7'},
-  ]);
-  const [messages, setMessages] = createSignal([
-    {
-      content: 'Salut je m\'appel francis',
-      author: 'Francis C.',
-    },
-    {
-      content: 'Salut je m\'appel francois',
-      author: 'Francois',
-    },
-  ]);
+  createEffect(() => {
+    client.auth.logIn({
+      expiration,
+      username: username,
+      password: password,
+    }).then(response => {
+      client.setToken(response.token)
+      client.confd.getUser(response.uuid).then(userResponse => {
+        setCurrentUser(userResponse);
+      });
 
-  const handleRoomChange = roomUuid => {
-    alert(`Change to room ${roomUuid}`);
+      client.chatd.getUserRooms().then(roomsResponse => {
+        setRooms(roomsResponse);
+
+        if(roomsResponse.length > 0) {
+          handleRoomChange(roomsResponse[0])
+        }
+      });
+    });
+  })
+
+  const scrollBottom = () => {
+    refMessage.value = '';
+    refRoom.scrollTop = refRoom.scrollHeight;
+  }
+
+  const handleRoomChange = room => {
+    setRoom(room);
+
+    client.chatd.getRoomMessages(room.uuid).then(messagesResponse => {
+      setMessages(messagesResponse.reverse());
+      scrollBottom();
+    })
   }
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    setMessages([...messages(), {
-      author: 'Francis C.',
-      content: refMessage.value,
-    }])
 
-    refMessage.value = '';
-    refRoom.scrollTop = refRoom.scrollHeight;
+    const messagePayload = {
+      content: refMessage.value,
+      alias: [currentUser().firstName, currentUser().lastName].filter(Boolean).join(' '),
+    }
+    client.chatd.sendRoomMessage(room().uuid, messagePayload).then(() => {
+      // @todo Listen to websocket instaed
+      // @todo Listen to websocket instaed
+      client.chatd.getRoomMessages(room().uuid).then(messagesResponse => {
+        setMessages(messagesResponse.reverse());
+        scrollBottom();
+      })
+    });
+  }
+
+  if(!host || !username || !password) {
+    return <p>Please defined server config in the URL: <code>{ window.location.origin }/?host=MY_HOST&username=MY_USERNAME&password=MY_PASSWORD</code></p>
   }
 
   return (
@@ -64,7 +104,7 @@ function App() {
             {
               (message) => (
                 <div className={styles.roomMessage}>
-                  <p className={styles.roomMessageAuthor}>{ message.author }</p>
+                  <p className={styles.roomMessageAuthor}>{ message.alias }</p>
                   <div>
                     { message.content }
                   </div>
@@ -77,7 +117,7 @@ function App() {
         <div className={styles.createMessage}>
           <form onSubmit={handleFormSubmit}>
             {/* <textarea ref={refMessage}></textarea> */}
-            <input type="text" ref={refMessage} />
+            <input type="text" ref={refMessage} required />
           </form>
           <button>Emoji</button>
         </div>
