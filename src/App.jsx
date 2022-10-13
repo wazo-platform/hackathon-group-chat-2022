@@ -223,16 +223,6 @@ function App() {
     <div className={styles.page}>
       <div className={styles.rooms}>
         <button onClick={toggleCreateRoom}><strong>➕ Create Room</strong></button>
-        {/* {
-          rooms()?.map((room) => (
-            <button onClick={() => {
-              handleRoomChange(room)
-            }}>
-              { room.name }
-            </button>
-          ))
-        } */}
-
         <For each={rooms()} fallback={<div>Loading Rooms...</div>}>
           {
             (room) => (
@@ -248,10 +238,14 @@ function App() {
 
       <div ref={refRoom} className={styles.room}>
         <div className={styles.roomMessages}>
-          <For each={messages()} fallback={<div>Loading Messages...</div>}>
+          <For each={messages()} fallback={<div>Empty Chat...</div>}>
             {
               (message) => (
-                <div className={styles.roomMessage} onClick={(e) => handleMessageClick(e, message)}>
+                <div
+                  className={styles.roomMessage}
+                  classList={{ [styles.roomMessageSelected]: currentMessage()?.uuid === message.uuid && showPicker() }}
+                  onClick={(e) => handleMessageClick(e, message)}
+                >
                   <p className={styles.roomMessageAuthor}>{ message.alias }</p>
                   <SolidMarkdown children={message.content} />
                   <MessageReactions reactions={message?.reactions} />
@@ -264,7 +258,7 @@ function App() {
         <div className={styles.createMessage}>
           <form onSubmit={handleFormSubmit}>
             {/* <textarea ref={refMessage}></textarea> */}
-            <input type="text" ref={refMessage} required />
+            <input type="text" ref={refMessage} placeholder="Write you message here..." required />
           </form>
           <button className={styles.buttonEmoji} onClick={toggleEmojiPicker}>😀</button>
         </div>
