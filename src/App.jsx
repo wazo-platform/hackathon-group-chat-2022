@@ -128,7 +128,7 @@ function App() {
   })
 
   const handleSetEmoji = (event, forcedEmoji) => {
-    setShowPicker(false);
+    closeEmojiPicker();
     const emojiChar = event?.detail?.unicode || forcedEmoji;
 
     if(pickerType() === PICKET_TYPE_GLOBAL) {
@@ -177,6 +177,18 @@ function App() {
     client.chatd.sendRoomMessage(room().uuid, messagePayload)
   }
 
+  const closeEmojiPicker = (e) => {
+    // If manipulating emoji-picker, ignore close
+    if(e?.path?.some(element => element.nodeName === 'EMOJI-PICKER')) {
+      return;
+    }
+
+    e?.stopPropagation();
+    e?.preventDefault();
+    window.removeEventListener("click", closeEmojiPicker);
+    setShowPicker(false);
+  }
+
   const toggleEmojiPicker = (e) => {
     const elementPosition = e.target.getBoundingClientRect();
     const pickerWidth = 344;
@@ -194,17 +206,27 @@ function App() {
 
     setShowPicker(!showPicker())
     setPickerType(e.target.nodeName === 'BUTTON' ? PICKET_TYPE_GLOBAL : PICKET_TYPE_REACTION);
+
+    setTimeout(() => {
+      window.addEventListener("click", closeEmojiPicker);
+    }, 250);
   }
 
   const toggleCreateRoom = (e) => {
     e?.preventDefault();
-    setShowCreateRoom(!showCreateRoom());
+
+    if(showCreateRoom()) {
+      closeEmojiPicker();
+      setShowCreateRoom(!showCreateRoom());
+      return;
+    }
+
+    setShowCreateRoom(true);
   }
 
   const handleMessageClick = (e, message) => {
     e.preventDefault();
     setCurrentMessage(message)
-
 
     if(e.target.classList.contains('message-reaction')) {
       setPickerType(PICKET_TYPE_REACTION);
@@ -212,7 +234,9 @@ function App() {
       return;
     }
 
-    toggleEmojiPicker(e);
+    if(!showPicker()) {
+      toggleEmojiPicker(e);
+    }
   }
 
   if(!host || !username || !password) {
@@ -260,7 +284,7 @@ function App() {
             {/* <textarea ref={refMessage}></textarea> */}
             <input type="text" ref={refMessage} placeholder="Write you message here..." required />
           </form>
-          <button className={styles.buttonEmoji} onClick={toggleEmojiPicker}>😀</button>
+          <button id="create-message-emoji" className={styles.buttonEmoji} onClick={toggleEmojiPicker}>😀</button>
         </div>
       </div>
 
