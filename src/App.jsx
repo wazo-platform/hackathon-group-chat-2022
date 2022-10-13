@@ -1,4 +1,4 @@
-import { For, createSignal, createEffect } from "solid-js";
+import { For, createSignal, createEffect, Show } from "solid-js";
 import SolidMarkdown from "solid-markdown";
 import { WazoWebSocketClient } from '@wazo/sdk'
 import 'emoji-picker-element';
@@ -9,6 +9,7 @@ import { getWazoClient, playNotification } from './services';
 const client = getWazoClient()
 
 import styles from './App.module.scss';
+import CreateRoom from "./CreateRoom";
 
 const expiration = 60 * 60;
 let refMessage;
@@ -20,7 +21,7 @@ function App() {
 
   const [showPicker, setShowPicker] = createSignal(false);
   const [currentUser, setCurrentUser] = createSignal(null);
-  const [rooms, setRooms] = createSignal(null);
+  const [rooms, setRooms] = createSignal(null, { equals: false });
   const [room, setRoom] = createSignal(null);
   const [messages, setMessages] = createSignal(null);
 
@@ -60,12 +61,12 @@ function App() {
       });
 
       ws.on('chatd_user_room_created', (message) => {
-        // client.chatd.createRoom(name: string, users: Array<ChatUser>);
+        console.log(`🤠 -> ws.on -> message`, message?.data);
+        console.log([...rooms(), message?.data]);
 
-        // if(data?.room?.uuid === room().uuid) {
-        //   setMessages([...messages(), data])
-        //   scrollBottom();
-        // }
+        // setRooms([...rooms(), message?.data]);
+        // setRooms([...rooms(), { uuid: 1, name: 'Test' }]);
+        setRooms([{ uuid: 1, name: 'Test' }]);
       });
 
 
@@ -164,8 +165,8 @@ function App() {
 
       <emoji-picker className={showPicker() ? '' : 'hide'}></emoji-picker>
 
-      <Show when={showCreateRoom()} fallback={null}>
-        <div>My Content</div>
+      <Show when={showCreateRoom()}>
+        <CreateRoom handleFormSubmit={toggleCreateRoom} />
       </Show>
     </div>
   );
