@@ -10,6 +10,7 @@ const client = getWazoClient()
 
 import styles from './App.module.scss';
 import CreateRoom from "./CreateRoom";
+import MessageReactions from "./MessageReactions";
 
 const expiration = 60 * 60;
 let refMessage;
@@ -244,9 +245,7 @@ function App() {
                 <div className={styles.roomMessage} onClick={(e) => handleMessageClick(e, message)}>
                   <p className={styles.roomMessageAuthor}>{ message.alias }</p>
                   <SolidMarkdown children={message.content} />
-                  <p className={styles.roomMessageReaction}>
-                    { message?.reactions?.map(reaction => <span className="message-reaction">{ reaction.emoji }</span>) }
-                  </p>
+                  <MessageReactions reactions={message?.reactions} />
                 </div>
               )
             }

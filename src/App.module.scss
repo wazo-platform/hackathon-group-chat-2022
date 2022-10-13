@@ -58,25 +58,6 @@
   font-size: 14px;
 }
 
-.roomMessageReaction {
-  span {
-    transition: 350ms ease all;
-    display: inline-block;
-    border: 1px solid #666;
-    width: 25px;
-    height: 25px;
-    border-radius: 4px;
-    text-align: center;
-    margin-right: 5px;
-    font-size: 14px;
-
-    &:hover, &:active {
-      background-color: #FFF;
-    }
-  }
-
-}
-
 .createMessage {
   position: fixed;
   bottom: 0;
