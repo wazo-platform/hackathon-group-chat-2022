@@ -1,6 +1,6 @@
 import { For, createSignal, createEffect } from "solid-js";
 import SolidMarkdown from "solid-markdown";
-import { WazoApiClient } from '@wazo/sdk'
+import { WazoApiClient, WazoWebSocketClient } from '@wazo/sdk'
 import 'emoji-picker-element';
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -20,6 +20,7 @@ import styles from './App.module.scss';
 const expiration = 60 * 2;
 let refMessage;
 let refRoom;
+let ws;
 
 function App() {
   const [showPicker, setShowPicker] = createSignal(false);
@@ -40,7 +41,26 @@ function App() {
       username: username,
       password: password,
     }).then(response => {
-      client.setToken(response.token)
+      client.setToken(response.token);
+
+      ws = new WazoWebSocketClient({
+        host,
+        token: response.token,
+        events: ['chatd_user_room_message_created', 'chatd_user_room_created'],
+        version: '2'
+      });
+      ws.connect();
+
+      ws.on('chatd_user_room_message_created', ({ data }) => {
+        if(data?.room?.uuid === room().uuid) {
+          setMessages([...messages(), data])
+          scrollBottom();
+        }
+      });
+
+
+      // --------
+
       client.confd.getUser(response.uuid).then(userResponse => {
         setCurrentUser(userResponse);
       });
@@ -76,14 +96,7 @@ function App() {
       content: refMessage.value,
       alias: [currentUser().firstName, currentUser().lastName].filter(Boolean).join(' '),
     }
-    client.chatd.sendRoomMessage(room().uuid, messagePayload).then(() => {
-      // @todo Listen to websocket instaed
-      // @todo Listen to websocket instaed
-      client.chatd.getRoomMessages(room().uuid).then(messagesResponse => {
-        setMessages(messagesResponse.reverse());
-        scrollBottom();
-      })
-    });
+    client.chatd.sendRoomMessage(room().uuid, messagePayload)
   }
 
   const toggleEmojiPicker = () => {
@@ -102,7 +115,7 @@ function App() {
           {
             (room) => (
               <button onClick={() => {
-                handleRoomChange(room.uuid)
+                handleRoomChange(room)
               }}>
                 { room.name }
               </button>
