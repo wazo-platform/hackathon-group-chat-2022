@@ -14,6 +14,7 @@ import CreateRoom from "./CreateRoom";
 const expiration = 60 * 60;
 let refMessage;
 let refRoom;
+let refEmojiPicker;
 let ws;
 
 function App() {
@@ -110,7 +111,18 @@ function App() {
     client.chatd.sendRoomMessage(room().uuid, messagePayload)
   }
 
-  const toggleEmojiPicker = () => {
+  const toggleEmojiPicker = (e) => {
+    const elementPosition = e.target.getBoundingClientRect();
+    console.log(`🤠 -> toggleEmojiPicker -> elementPosition`, elementPosition);
+    const pickerWidth = 344;
+    const pickerHeight = 398;
+
+    const x = elementPosition.right - pickerWidth;
+    const y = elementPosition.y - pickerHeight - 12;
+
+    refEmojiPicker.style.left = `${x}px`;
+    refEmojiPicker.style.top = `${y}px`;
+
     setShowPicker(!showPicker())
   }
 
@@ -163,7 +175,7 @@ function App() {
         </div>
       </div>
 
-      <emoji-picker className={showPicker() ? '' : 'hide'}></emoji-picker>
+      <emoji-picker ref={refEmojiPicker} className={showPicker() ? '' : 'hide'}></emoji-picker>
 
       <Show when={showCreateRoom()}>
         <CreateRoom handleFormSubmit={toggleCreateRoom} />
