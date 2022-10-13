@@ -31,7 +31,6 @@
 
 .room {
   position: relative;
-  padding: 15px 15px 0 15px;
   overflow-y: scroll;
   width: 100%;
   height: calc(100vh - 80px);
@@ -42,13 +41,40 @@
 }
 
 .roomMessage {
+  transition: 350ms ease background;
   margin-bottom: 10px;
+  padding: 6px 15px;
+  cursor: pointer;
+
   &:last-child { margin-bottom: 0; }
+
+  &:hover, &:active {
+    background-color: #F0F0F0;
+  }
 }
 
 .roomMessageAuthor {
   color: #999;
   font-size: 14px;
+}
+
+.roomMessageReaction {
+  span {
+    transition: 350ms ease all;
+    display: inline-block;
+    border: 1px solid #666;
+    width: 25px;
+    height: 25px;
+    border-radius: 4px;
+    text-align: center;
+    margin-right: 5px;
+    font-size: 14px;
+
+    &:hover, &:active {
+      background-color: #FFF;
+    }
+  }
+
 }
 
 .createMessage {

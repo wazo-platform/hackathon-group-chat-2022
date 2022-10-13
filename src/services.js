@@ -1,3 +1,4 @@
+import { ApiRequester } from '@wazo/sdk'
 import getApiClient from '@wazo/sdk/lib/service/getApiClient';
 
 import { host } from './constants';
@@ -12,9 +13,15 @@ export const getWazoClient = () => {
   client.setClientId('hackaton-2022-group-chat');
 
   // @todo refresh token mecanism
-
   return client;
 }
+
+export const getWazoRequester = () =>
+  new ApiRequester({
+    server: host,
+    clientId: 'hackaton-2022-group-chat',
+    token: localStorage.getItem('token'),
+  });
 
 
 export const ascSort = (field) => (

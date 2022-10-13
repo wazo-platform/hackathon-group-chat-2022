@@ -4,7 +4,7 @@ import { WazoWebSocketClient } from '@wazo/sdk'
 import 'emoji-picker-element';
 
 import { host, username, password } from './constants';
-import { getWazoClient, playNotification } from './services';
+import { getWazoClient, getWazoRequester, playNotification } from './services';
 
 const client = getWazoClient()
 
@@ -17,21 +17,24 @@ let refRoom;
 let refEmojiPicker;
 let ws;
 
+const PICKET_TYPE_GLOBAL = 'global';
+const PICKET_TYPE_REACTION = 'reaction';
+
+
 function App() {
+  const [currentUser, setCurrentUser] = createSignal(null);
   const [showCreateRoom, setShowCreateRoom] = createSignal(false);
 
   const [showPicker, setShowPicker] = createSignal(false);
-  const [currentUser, setCurrentUser] = createSignal(null);
+  const [pickerType, setPickerType] = createSignal(PICKET_TYPE_GLOBAL);
+
   const [rooms, setRooms] = createSignal(null, { equals: false });
   const [room, setRoom] = createSignal(null);
   const [messages, setMessages] = createSignal(null);
+  const [currentMessage, setCurrentMessage] = createSignal(null);
 
   createEffect(() => {
-    document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
-      refMessage.value = `${refMessage.value} ${event.detail.unicode}`;
-      refMessage.focus();
-      setShowPicker(false);
-    });
+    document.querySelector('emoji-picker').addEventListener('emoji-click', handleSetEmoji);
 
     client.auth.logIn({
       expiration,
@@ -39,12 +42,18 @@ function App() {
       password: password,
     }).then(response => {
       client.setToken(response.token);
+      localStorage.setItem('token', response.token);
       localStorage.setItem('currentUserUuid', response.uuid);
 
       ws = new WazoWebSocketClient({
         host,
         token: response.token,
-        events: ['chatd_user_room_message_created', 'chatd_user_room_created'],
+        events: [
+          'chatd_user_room_message_created',
+          'chatd_user_room_created',
+          'chatd_users_room_message_reaction_created',
+          'chatd_users_room_message_reaction_deleted',
+        ],
         version: '2'
       });
       ws.connect();
@@ -70,6 +79,14 @@ function App() {
         setRooms([{ uuid: 1, name: 'Test' }]);
       });
 
+      ws.on('chatd_users_room_message_reaction_created', (message) => {
+        console.log(message);
+      });
+
+      ws.on('chatd_users_room_message_reaction_deleted', (message) => {
+        // @todo
+      });
+
 
       // --------
 
@@ -86,6 +103,32 @@ function App() {
       });
     });
   })
+
+  const handleSetEmoji = (event, forcedEmoji) => {
+    setShowPicker(false);
+    const emojiChar = event?.detail?.unicode || forcedEmoji;
+
+    if(pickerType() === PICKET_TYPE_GLOBAL) {
+      refMessage.value = `${refMessage.value} ${emojiChar}`;
+      refMessage.focus();
+      return;
+    }
+
+    if(pickerType() === PICKET_TYPE_REACTION) {
+      const requester = getWazoRequester();
+      const userUuid = localStorage.getItem('currentUserUuid');
+      const alreadyReacted = currentMessage()?.reactions.some(reaction => reaction.user_uuid === userUuid && reaction.emoji === emojiChar)
+
+      const reactionMethod = alreadyReacted ? 'delete' : 'post';
+      const reactionUrlExtra = reactionMethod === 'delete' ? `?emoji=${emojiChar}` : '';
+      const reactionUrl = `chatd/1.0/users/${userUuid}/rooms/${room().uuid}/messages/${currentMessage().uuid}/reactions${reactionUrlExtra}`;
+      const reactionPayload = {
+        emoji: emojiChar
+      };
+      requester.call(reactionUrl, reactionMethod, reactionPayload);
+      return;
+    }
+  }
 
   const scrollBottom = () => {
     refMessage.value = '';
@@ -113,7 +156,6 @@ function App() {
 
   const toggleEmojiPicker = (e) => {
     const elementPosition = e.target.getBoundingClientRect();
-    console.log(`🤠 -> toggleEmojiPicker -> elementPosition`, elementPosition);
     const pickerWidth = 344;
     const pickerHeight = 398;
 
@@ -124,11 +166,26 @@ function App() {
     refEmojiPicker.style.top = `${y}px`;
 
     setShowPicker(!showPicker())
+    setPickerType(e.target.nodeName === 'BUTTON' ? PICKET_TYPE_GLOBAL : PICKET_TYPE_REACTION);
   }
 
   const toggleCreateRoom = (e) => {
     e?.preventDefault();
     setShowCreateRoom(!showCreateRoom());
+  }
+
+  const handleMessageClick = (e, message) => {
+    e.preventDefault();
+    setCurrentMessage(message)
+
+
+    if(e.target.classList.contains('message-reaction')) {
+      setPickerType(PICKET_TYPE_REACTION);
+      handleSetEmoji(null, e.target.innerText);
+      return;
+    }
+
+    toggleEmojiPicker(e);
   }
 
   if(!host || !username || !password) {
@@ -157,9 +214,12 @@ function App() {
           <For each={messages()} fallback={<div>Loading Messages...</div>}>
             {
               (message) => (
-                <div className={styles.roomMessage}>
+                <div className={styles.roomMessage} onClick={(e) => handleMessageClick(e, message)}>
                   <p className={styles.roomMessageAuthor}>{ message.alias }</p>
                   <SolidMarkdown children={message.content} />
+                  <p className={styles.roomMessageReaction}>
+                    { message?.reactions?.map(reaction => <span className="message-reaction">{ reaction.emoji }</span>) }
+                  </p>
                 </div>
               )
             }
