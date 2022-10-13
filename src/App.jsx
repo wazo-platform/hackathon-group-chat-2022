@@ -182,8 +182,12 @@ function App() {
     const pickerWidth = 344;
     const pickerHeight = 398;
 
-    const x = elementPosition.right - pickerWidth;
-    const y = elementPosition.y - pickerHeight - 12;
+    let x = elementPosition.right - pickerWidth;
+    let y = elementPosition.y - pickerHeight - 12;
+
+    if(y < 0) {
+      y = elementPosition.bottom + 12;
+    }
 
     refEmojiPicker.style.left = `${x}px`;
     refEmojiPicker.style.top = `${y}px`;
