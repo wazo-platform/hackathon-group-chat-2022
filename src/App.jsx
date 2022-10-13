@@ -79,12 +79,39 @@ function App() {
         setRooms([{ uuid: 1, name: 'Test' }]);
       });
 
-      ws.on('chatd_users_room_message_reaction_created', (message) => {
-        console.log(message);
+      ws.on('chatd_users_room_message_reaction_created', ({ data, message_uuid }) => {
+        const updatedMessage = messages().map(message => {
+          if(message.uuid !== message_uuid) {
+            return message;
+          }
+
+          const reactions = message.reactions || [];
+
+          return {
+            ...message,
+            reactions: [...reactions, data]
+          };
+        })
+
+        setMessages(updatedMessage);
       });
 
-      ws.on('chatd_users_room_message_reaction_deleted', (message) => {
-        // @todo
+      ws.on('chatd_users_room_message_reaction_deleted', ({ data, message_uuid }) => {
+        const updatedMessage = messages().map(message => {
+          if(message.uuid !== message_uuid) {
+            return message;
+          }
+
+          const reactions = (message.reactions || []).filter(reaction =>
+            !(reaction.emoji === data.emoji && reaction.user_uuid === data.user_uuid));
+
+          return {
+            ...message,
+            reactions,
+          };
+        })
+
+        setMessages(updatedMessage);
       });
 
 
