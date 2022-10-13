@@ -1,19 +1,12 @@
 import { For, createSignal, createEffect } from "solid-js";
 import SolidMarkdown from "solid-markdown";
-import { WazoApiClient, WazoWebSocketClient } from '@wazo/sdk'
+import { WazoWebSocketClient } from '@wazo/sdk'
 import 'emoji-picker-element';
 
-const urlParams = new URLSearchParams(window.location.search);
-const host = urlParams.get('host');
-const username = urlParams.get('username');
-const password = urlParams.get('password');
+import { host, username, password } from './constants';
+import { getWazoClient, playNotification } from './services';
 
-const client = new WazoApiClient({
-  server: host,
-  agent: null, // http(s).Agent instance, allows custom proxy, unsecured https, certificate etc.
-  clientId: null, // Set an identifier for your app when using refreshToken
-  isMobile: false,
-});
+const client = getWazoClient()
 
 import styles from './App.module.scss';
 
@@ -23,6 +16,8 @@ let refRoom;
 let ws;
 
 function App() {
+  const [showCreateRoom, setShowCreateRoom] = createSignal(false);
+
   const [showPicker, setShowPicker] = createSignal(false);
   const [currentUser, setCurrentUser] = createSignal(null);
   const [rooms, setRooms] = createSignal(null);
@@ -42,6 +37,7 @@ function App() {
       password: password,
     }).then(response => {
       client.setToken(response.token);
+      localStorage.setItem('currentUserUuid', response.uuid);
 
       ws = new WazoWebSocketClient({
         host,
@@ -53,9 +49,23 @@ function App() {
 
       ws.on('chatd_user_room_message_created', ({ data }) => {
         if(data?.room?.uuid === room().uuid) {
+          localStorage.getItem('currentUserUuid')
+          if(data?.user_uuid !== localStorage.getItem('currentUserUuid')) {
+            playNotification();
+          }
+
           setMessages([...messages(), data])
           scrollBottom();
         }
+      });
+
+      ws.on('chatd_user_room_created', (message) => {
+        // client.chatd.createRoom(name: string, users: Array<ChatUser>);
+
+        // if(data?.room?.uuid === room().uuid) {
+        //   setMessages([...messages(), data])
+        //   scrollBottom();
+        // }
       });
 
 
@@ -103,14 +113,19 @@ function App() {
     setShowPicker(!showPicker())
   }
 
+  const toggleCreateRoom = (e) => {
+    e?.preventDefault();
+    setShowCreateRoom(!showCreateRoom());
+  }
+
   if(!host || !username || !password) {
     return <p>Please defined server config in the URL: <code>{ window.location.origin }/?host=MY_HOST&username=MY_USERNAME&password=MY_PASSWORD</code></p>
   }
 
   return (
     <div className={styles.page}>
-  {(item) => <div>{item}</div>}
       <div className={styles.rooms}>
+        <button onClick={toggleCreateRoom}><strong>➕ Create Room</strong></button>
         <For each={rooms()} fallback={<div>Loading Rooms...</div>}>
           {
             (room) => (
@@ -148,6 +163,10 @@ function App() {
       </div>
 
       <emoji-picker className={showPicker() ? '' : 'hide'}></emoji-picker>
+
+      <Show when={showCreateRoom()} fallback={null}>
+        <div>My Content</div>
+      </Show>
     </div>
   );
 }
