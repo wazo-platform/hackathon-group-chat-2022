@@ -17,7 +17,7 @@ const client = new WazoApiClient({
 
 import styles from './App.module.scss';
 
-const expiration = 60 * 2;
+const expiration = 60 * 60;
 let refMessage;
 let refRoom;
 let ws;
@@ -31,7 +31,7 @@ function App() {
 
   createEffect(() => {
     document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
-      refMessage.value = refMessage.value + event.detail.unicode;
+      refMessage.value = `${refMessage.value} ${event.detail.unicode}`;
       refMessage.focus();
       setShowPicker(false);
     });
