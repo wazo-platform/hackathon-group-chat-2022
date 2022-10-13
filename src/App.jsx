@@ -72,12 +72,7 @@ function App() {
       });
 
       ws.on('chatd_user_room_created', (message) => {
-        console.log(`🤠 -> ws.on -> message`, message?.data);
-        console.log([...rooms(), message?.data]);
-
-        // setRooms([...rooms(), message?.data]);
-        // setRooms([...rooms(), { uuid: 1, name: 'Test' }]);
-        setRooms([{ uuid: 1, name: 'Test' }]);
+        setRooms([...rooms(), message?.data]);
       });
 
       ws.on('chatd_users_room_message_reaction_created', ({ data, message_uuid }) => {
@@ -224,6 +219,16 @@ function App() {
     <div className={styles.page}>
       <div className={styles.rooms}>
         <button onClick={toggleCreateRoom}><strong>➕ Create Room</strong></button>
+        {/* {
+          rooms()?.map((room) => (
+            <button onClick={() => {
+              handleRoomChange(room)
+            }}>
+              { room.name }
+            </button>
+          ))
+        } */}
+
         <For each={rooms()} fallback={<div>Loading Rooms...</div>}>
           {
             (room) => (

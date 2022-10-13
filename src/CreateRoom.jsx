@@ -21,14 +21,16 @@ export default (props) => {
       }
     });
 
-    refModal.addEventListener('close', () => {
-      props.handleFormSubmit();
-    });
+    refModal.addEventListener('close', handleModalClose);
 
     onCleanup(() => {
-      refModal.addEventListener('close');
+      refModal.removeEventListener('close', handleModalClose);
     })
   })
+
+  const handleModalClose = () => {
+    props.handleFormSubmit();
+  }
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
