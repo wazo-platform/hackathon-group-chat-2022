@@ -18,6 +18,8 @@
     "@wazo/sdk": "^0.38.16",
     "emoji-picker-element": "^1.12.1",
     "patch-package": "^6.4.7",
+    "remark-breaks": "^3.0.2",
+    "remark-gfm": "^3.0.1",
     "sass": "^1.55.0",
     "solid-js": "^1.5.1",
     "solid-markdown": "^1.2.0"

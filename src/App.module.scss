@@ -66,6 +66,36 @@
   }
 }
 
+.roomMessageContent {
+  p {
+    margin-bottom: 8px;
+    &:last-child { margin-bottom: 0; }
+  }
+
+  ul {
+    list-style-type: disc;
+    margin-left: 15px;
+    margin-bottom: 8px;
+    &:last-child { margin-bottom: 0; }
+  }
+
+  ol {
+    list-style-type: decimal;
+    margin-left: 18px;
+    margin-bottom: 8px;
+    &:last-child { margin-bottom: 0; }
+  }
+
+  table {
+    border-collapse: collapse;
+
+    td, th {
+      padding: 4px;
+      border: 1px solid #333;
+    }
+  }
+}
+
 .roomMessageSelected {
   background-color: #F0F0F0;
 
