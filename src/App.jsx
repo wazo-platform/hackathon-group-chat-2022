@@ -233,7 +233,7 @@ function App() {
   }
 
   const handleMessageClick = (e, message) => {
-    if(e.target.href.indexOf('https://') || e.target.href.indexOf('http://')) {
+    if(e?.target?.href?.indexOf('https://') || e?.target?.href?.indexOf('http://')) {
       return;
     }
 
