@@ -2,6 +2,7 @@ import { For, createSignal, createEffect, Show } from "solid-js";
 import SolidMarkdown from "solid-markdown";
 import remarkBreaks from 'remark-breaks'
 import remarkGFM from 'remark-gfm'
+import remarkGemoji from 'remark-gemoji'
 import { WazoWebSocketClient } from '@wazo/sdk'
 import 'emoji-picker-element';
 
@@ -285,7 +286,7 @@ function App() {
                     class={styles.roomMessageContent}
                     children={message.content}
                     linkTarget="_blank"
-                    remarkPlugins={[remarkBreaks, remarkGFM]}
+                    remarkPlugins={[remarkBreaks, remarkGFM, remarkGemoji]}
                   />
                   <MessageReactions reactions={message?.reactions} />
                   <button id="add-reaction" className={styles.buttonEmoji} onClick={toggleEmojiPicker}>😀</button>

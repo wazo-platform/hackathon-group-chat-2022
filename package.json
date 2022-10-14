@@ -19,6 +19,7 @@
     "emoji-picker-element": "^1.12.1",
     "patch-package": "^6.4.7",
     "remark-breaks": "^3.0.2",
+    "remark-gemoji": "^7.0.1",
     "remark-gfm": "^3.0.1",
     "sass": "^1.55.0",
     "solid-js": "^1.5.1",
