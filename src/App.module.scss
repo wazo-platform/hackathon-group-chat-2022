@@ -42,19 +42,37 @@
 
 .roomMessage {
   transition: 350ms ease background;
-  margin-bottom: 10px;
-  padding: 6px 15px;
-  cursor: pointer;
+  padding: 10px 30px 10px 15px;
+  position: relative;
 
   &:last-child { margin-bottom: 0; }
 
   &:hover, &:active {
     background-color: #F0F0F0;
+
+    button {
+      pointer-events: inherit;
+      opacity: 1;
+    }
+  }
+
+  button {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    border: 1px solid #E0E0E0;
   }
 }
 
 .roomMessageSelected {
   background-color: #F0F0F0;
+
+  button {
+    pointer-events: inherit;
+    opacity: 1;
+  }
 }
 
 .roomMessageAuthor {

@@ -205,7 +205,7 @@ function App() {
     refEmojiPicker.style.top = `${y}px`;
 
     setShowPicker(!showPicker())
-    setPickerType(e.target.nodeName === 'BUTTON' ? PICKET_TYPE_GLOBAL : PICKET_TYPE_REACTION);
+    setPickerType(e.target.id === 'create-message-emoji' ? PICKET_TYPE_GLOBAL : PICKET_TYPE_REACTION);
 
     setTimeout(() => {
       window.addEventListener("click", closeEmojiPicker);
@@ -232,10 +232,6 @@ function App() {
       setPickerType(PICKET_TYPE_REACTION);
       handleSetEmoji(null, e.target.innerText);
       return;
-    }
-
-    if(!showPicker()) {
-      toggleEmojiPicker(e);
     }
   }
 
@@ -273,6 +269,7 @@ function App() {
                   <p className={styles.roomMessageAuthor}>{ message.alias }</p>
                   <SolidMarkdown children={message.content} />
                   <MessageReactions reactions={message?.reactions} />
+                  <button id="add-reaction" className={styles.buttonEmoji} onClick={toggleEmojiPicker}>😀</button>
                 </div>
               )
             }
