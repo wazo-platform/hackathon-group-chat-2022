@@ -22,9 +22,6 @@ module.exports = {
     }
   },
   rules: {
-    "solid/reactivity": "warn",
-    "solid/no-destructure": "warn",
-    "solid/jsx-no-undef": "error",
     "camelcase": 0,
     "no-plusplus": 0,
     "max-len": [
