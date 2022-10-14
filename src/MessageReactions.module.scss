@@ -11,9 +11,11 @@
     margin-right: 5px;
     font-size: 14px;
     background: #FCFCFC;
+    cursor: pointer;
+    vertical-align: top;
 
     &:hover, &:active {
-      background-color: #FFF;
+      background-color: #FFF !important;
     }
 
     &::after {
@@ -22,5 +24,11 @@
       font-size: 12px;
       color: #888;
     }
+
+    &:global(.selected) {
+      border-color: #1c58d9;
+      background-color: rgba(28, 88, 217, 0.08);
+    }
   }
+
 }
