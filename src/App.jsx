@@ -13,6 +13,7 @@ import CreateRoom from "./CreateRoom";
 import MessageReactions from "./MessageReactions";
 
 const expiration = 60 * 60;
+let refFormCreateMessage;
 let refMessage;
 let refRoom;
 let refEmojiPicker;
@@ -167,6 +168,13 @@ function App() {
     })
   }
 
+  const handleSubmitOnEnter = (e) => {
+    if(e.keyCode === 13 && !e.shiftKey) {
+      e.preventDefault();
+      handleFormSubmit(e);
+    }
+  }
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
 
@@ -225,6 +233,10 @@ function App() {
   }
 
   const handleMessageClick = (e, message) => {
+    if(e.target.href.indexOf('https://') || e.target.href.indexOf('http://')) {
+      return;
+    }
+
     e.preventDefault();
     setCurrentMessage(message)
 
@@ -267,7 +279,10 @@ function App() {
                   onClick={(e) => handleMessageClick(e, message)}
                 >
                   <p className={styles.roomMessageAuthor}>{ message.alias }</p>
-                  <SolidMarkdown children={message.content} />
+                  <SolidMarkdown
+                    children={message.content.replace(/\n/g, "\n\n")}
+                    linkTarget="_blank"
+                  />
                   <MessageReactions reactions={message?.reactions} />
                   <button id="add-reaction" className={styles.buttonEmoji} onClick={toggleEmojiPicker}>😀</button>
                 </div>
@@ -277,9 +292,8 @@ function App() {
         </div>
 
         <div className={styles.createMessage}>
-          <form onSubmit={handleFormSubmit}>
-            {/* <textarea ref={refMessage}></textarea> */}
-            <input type="text" ref={refMessage} placeholder="Write you message here..." required />
+          <form ref={refFormCreateMessage} onSubmit={handleFormSubmit}>
+            <textarea ref={refMessage} onKeyDown={handleSubmitOnEnter} placeholder="Write you message here..." required />
           </form>
           <button id="create-message-emoji" className={styles.buttonEmoji} onClick={toggleEmojiPicker}>😀</button>
         </div>
