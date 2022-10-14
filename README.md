@@ -1,18 +1,27 @@
-## Usage
+## Introduction
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+> 🔔 This project does not work with released wazo-platform versions. Patches are needed to make it works.
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+This project have been built during the Wazo Hackathon 2022.
 
-```bash
-$ npm install # or pnpm install or yarn install
-```
+The main objective of the team was to explore :
+- Implement group chat features, markdown support and reactions.
+- Create a bridge between Wazo Stack and [Matrix Framework](https://github.com/matrix-org)
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+Here are some screenshots of the app we created.
+
+| Markdown Support | Room Creation | Emojis & Reactions |
+|---|---|---|
+| ![](./readme/channel-markdown.jpg) | ![](./readme/create-room.jpg) | ![](./readme//emoji-picker.jpg) |
+
 
 ## Available Scripts
 
 In the project directory, you can run:
+
+### `npm install`
+
+Will install all dependencies required to run the projet.
 
 ### `npm dev` or `npm start`
 
