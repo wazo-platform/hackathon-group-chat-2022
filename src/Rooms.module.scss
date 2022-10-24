@@ -1,0 +1,25 @@
+.rooms {
+  flex: 0 0 200px;
+  background: #333;
+  overflow-y: scroll;
+  color: #FFF;
+
+  button {
+    transition: 250ms ease all;
+    width: 100%;
+    display: block;
+    background: none;
+    border: none;
+    text-align: left;
+    color: #FCFCFC;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 8px 10px;
+    outline: 0;
+
+    &:hover, &:active {
+      background: #222;
+      color: #FFF;
+    }
+  }
+}

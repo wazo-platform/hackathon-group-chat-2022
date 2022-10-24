@@ -1,45 +1,29 @@
-import {
-  For, createSignal, Show, onMount,
-} from 'solid-js';
-import SolidMarkdown from 'solid-markdown';
-import remarkBreaks from 'remark-breaks';
-import remarkGFM from 'remark-gfm';
-import remarkGemoji from 'remark-gemoji';
+import { createSignal, Show, onMount } from 'solid-js';
 import { WazoWebSocketClient } from '@wazo/sdk';
 import 'emoji-picker-element';
 
-import { host, username, password } from './constants';
+import {
+  host, username, password, PICKET_TYPE_GLOBAL, PICKET_TYPE_REACTION,
+} from './constants';
 import { getWazoClient, getWazoRequester, playNotification } from './services';
 
 import styles from './App.module.scss';
-import CreateRoom from './CreateRoom';
-import MessageReactions from './MessageReactions';
+import { closeEmojiPicker } from './EmojiButton';
+import CreateMessage from './CreateMessage';
+import RoomMessages from './RoomMessages';
+import Rooms from './Rooms';
+import NotConfigured from './NotConfigured';
 
 const client = getWazoClient();
 
 const expiration = 60 * 60;
 const isConfigurationDefined = host && username && password;
-let refFormCreateMessage;
-let refMessage;
 let refRoom;
-let refEmojiPicker;
 let ws;
-
-const PICKET_TYPE_GLOBAL = 'global';
-const PICKET_TYPE_REACTION = 'reaction';
-
-const NotConfigured = () => (
-  <p>
-    Please defined server config in the URL:{' '}
-    <code>{window.location.origin}/?host=MY_HOST&username=MY_USERNAME&password=MY_PASSWORD</code>
-  </p>
-);
 
 function App() {
   const [currentUser, setCurrentUser] = createSignal(null);
-  const [showCreateRoom, setShowCreateRoom] = createSignal(false);
 
-  const [showPicker, setShowPicker] = createSignal(false);
   const [pickerType, setPickerType] = createSignal(PICKET_TYPE_GLOBAL);
 
   const [rooms, setRooms] = createSignal(null);
@@ -47,25 +31,14 @@ function App() {
   const [messages, setMessages] = createSignal(null);
   const [currentMessage, setCurrentMessage] = createSignal(null);
 
-  const closeEmojiPicker = (e) => {
-    // If manipulating emoji-picker, ignore close
-    if (e?.path?.some((element) => element.nodeName === 'EMOJI-PICKER')) {
-      return;
-    }
-
-    e?.stopPropagation();
-    e?.preventDefault();
-    window.removeEventListener('click', closeEmojiPicker);
-    setShowPicker(false);
-  };
-
   const handleSetEmoji = (event, forcedEmoji) => {
     closeEmojiPicker();
     const emojiChar = event?.detail?.unicode || forcedEmoji;
 
     if (pickerType() === PICKET_TYPE_GLOBAL) {
-      refMessage.value = `${refMessage.value} ${emojiChar}`;
-      refMessage.focus();
+      const newMessageInput = document.querySelector('#create-message-input');
+      newMessageInput.value = `${newMessageInput.value} ${emojiChar}`;
+      newMessageInput.focus();
       return;
     }
 
@@ -89,7 +62,7 @@ function App() {
   };
 
   const scrollBottom = () => {
-    refMessage.value = '';
+    document.querySelector('#create-message-input').value = '';
     refRoom.scrollTop = refRoom.scrollHeight;
   };
 
@@ -102,58 +75,6 @@ function App() {
     });
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-
-    const messagePayload = {
-      content: refMessage.value,
-      alias: [currentUser().firstName, currentUser().lastName].filter(Boolean).join(' '),
-    };
-    client.chatd.sendRoomMessage(room().uuid, messagePayload);
-  };
-
-  const handleSubmitOnEnter = (e) => {
-    if (e.keyCode === 13 && !e.shiftKey) {
-      e.preventDefault();
-      handleFormSubmit(e);
-    }
-  };
-
-  const toggleEmojiPicker = (e) => {
-    const elementPosition = e.target.getBoundingClientRect();
-    const pickerWidth = 344;
-    const pickerHeight = 398;
-
-    const x = elementPosition.right - pickerWidth;
-    let y = elementPosition.y - pickerHeight - 12;
-
-    if (y < 0) {
-      y = elementPosition.bottom + 12;
-    }
-
-    refEmojiPicker.style.left = `${x}px`;
-    refEmojiPicker.style.top = `${y}px`;
-
-    setShowPicker(!showPicker());
-    setPickerType(e.target.id === 'create-message-emoji' ? PICKET_TYPE_GLOBAL : PICKET_TYPE_REACTION);
-
-    setTimeout(() => {
-      window.addEventListener('click', closeEmojiPicker);
-    }, 250);
-  };
-
-  const toggleCreateRoom = (e) => {
-    e?.preventDefault();
-
-    if (showCreateRoom()) {
-      closeEmojiPicker();
-      setShowCreateRoom(!showCreateRoom());
-      return;
-    }
-
-    setShowCreateRoom(true);
-  };
-
   const handleMessageClick = (e, message) => {
     if (e?.target?.href?.indexOf('https://') || e?.target?.href?.indexOf('http://')) {
       return;
@@ -162,9 +83,14 @@ function App() {
     e.preventDefault();
     setCurrentMessage(message);
 
+    if (e.target.classList.contains('emoji-button')) {
+      return;
+    }
+
     if (e.target.classList.contains('message-reaction')) {
       setPickerType(PICKET_TYPE_REACTION);
       handleSetEmoji(null, e.target.innerText);
+      setCurrentMessage(null);
     }
   };
 
@@ -262,70 +188,14 @@ function App() {
   return (
     <Show when={isConfigurationDefined} fallback={<NotConfigured />}>
       <div class={styles.page}>
-        <div class={styles.rooms}>
-          <button onClick={toggleCreateRoom}>
-            <strong>➕ Create Room</strong>
-          </button>
-          <For each={rooms()} fallback={<div>Loading Rooms...</div>}>
-            {(roomItem) => (
-              <button
-                onClick={() => {
-                  handleRoomChange(roomItem);
-                }}
-              >
-                {roomItem.name}
-              </button>
-            )}
-          </For>
-        </div>
+        <Rooms rooms={rooms} onRoomClick={handleRoomChange} />
 
         <div ref={refRoom} class={styles.room}>
-          <div class={styles.roomMessages}>
-            <For each={messages()} fallback={<div>Empty Chat...</div>}>
-              {(message) => (
-                <div
-                  class={styles.roomMessage}
-                  classList={{
-                    [styles.roomMessageSelected]: currentMessage()?.uuid === message.uuid && showPicker(),
-                  }}
-                  onClick={(e) => handleMessageClick(e, message)}
-                >
-                  <p class={styles.roomMessageAuthor}>{message.alias}</p>
-                  <SolidMarkdown
-                    class={styles.roomMessageContent}
-                    children={message.content}
-                    linkTarget="_blank"
-                    remarkPlugins={[remarkBreaks, remarkGFM, remarkGemoji]}
-                  />
-                  <MessageReactions reactions={message?.reactions} />
-                  <button id="add-reaction" class={styles.buttonEmoji} onClick={toggleEmojiPicker}>
-                    😀
-                  </button>
-                </div>
-              )}
-            </For>
-          </div>
-
-          <div class={styles.createMessage}>
-            <form ref={refFormCreateMessage} onSubmit={handleFormSubmit}>
-              <textarea
-                ref={refMessage}
-                onKeyDown={handleSubmitOnEnter}
-                placeholder="Write you message here..."
-                required
-              />
-            </form>
-            <button id="create-message-emoji" class={styles.buttonEmoji} onClick={toggleEmojiPicker}>
-              😀
-            </button>
-          </div>
+          <RoomMessages messages={messages} onMessageClick={handleMessageClick} setPickerType={setPickerType} />
+          <CreateMessage currentUser={currentUser()} room={room()} setPickerType={setPickerType} />
         </div>
 
-        <emoji-picker ref={refEmojiPicker} class={showPicker() ? '' : 'hide'} />
-
-        <Show when={showCreateRoom()}>
-          <CreateRoom handleFormSubmit={toggleCreateRoom} />
-        </Show>
+        <emoji-picker id="emoji-picker" class="hide" />
       </div>
     </Show>
   );
