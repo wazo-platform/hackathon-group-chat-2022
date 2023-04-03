@@ -3,16 +3,18 @@ import styles from './MessageReactions.module.scss';
 
 export default (props) => {
   const currentUserUuid = localStorage.getItem('currentUserUuid');
-  const combinedReactions = createMemo(() => props?.reactions?.reduce(
-    (acc, { emoji, user_uuid }) => ({
-      ...acc,
-      [emoji]: {
-        count: (acc?.[emoji]?.count || 0) + 1,
-        selected: acc?.[emoji]?.selected || currentUserUuid === user_uuid,
-      },
-    }),
-    {},
-  ));
+  const combinedReactions = createMemo(
+    () => props?.reactions?.reduce(
+      (acc, { emoji, user_uuid }) => ({
+        ...acc,
+        [emoji]: {
+          count: (acc?.[emoji]?.count || 0) + 1,
+          selected: acc?.[emoji]?.selected || currentUserUuid === user_uuid,
+        },
+      }),
+      {},
+    ) || [],
+  );
 
   return (
     <p class={styles.roomMessageReaction}>

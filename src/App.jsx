@@ -43,9 +43,14 @@ function App() {
     }
 
     if (pickerType() === PICKET_TYPE_REACTION) {
+      if (!currentMessage()?.reactions) {
+        alert('Emojis are not supported by the server at the moment!');
+        return;
+      }
+
       const requester = getWazoRequester();
       const userUuid = localStorage.getItem('currentUserUuid');
-      const alreadyReacted = currentMessage()?.reactions.some(
+      const alreadyReacted = currentMessage()?.reactions?.some(
         (reaction) => reaction.user_uuid === userUuid && reaction.emoji === emojiChar,
       );
 

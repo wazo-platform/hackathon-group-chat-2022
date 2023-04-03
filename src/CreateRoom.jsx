@@ -19,7 +19,7 @@ export default (props) => {
     e.preventDefault();
 
     const selectedUsers = [{ uuid: localStorage.getItem('currentUserUuid') }];
-    for (let i = 0; i < refUsers.options; i++) {
+    for (let i = 0; i < refUsers.options.length; i++) {
       const option = refUsers.options[i];
       if (option.selected && Boolean(option.value) && option.value !== localStorage.getItem('currentUserUuid')) {
         selectedUsers.push({ uuid: option.value });
