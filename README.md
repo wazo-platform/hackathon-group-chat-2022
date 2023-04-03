@@ -1,6 +1,6 @@
 ## Introduction
 
-> 🔔 This project does not work with released wazo-platform versions. Patches are needed to make it works.
+> 🔔 Emojis are not officially supported by Wazo Platform. Patches are needed to make it works.
 
 This project have been built during the Wazo Hackathon 2022.
 
